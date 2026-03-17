@@ -61,6 +61,7 @@ fi
 echo Starting storage process... takes ~10 seconds
 mkdir -p "$LOGS_PATH"
 $YDBD_PATH server --yaml-config "$CONFIG_PATH/$cfg" --node 1 \
+  --log-level 8 --log-sampling-rate 0 --log-format full \
   --log-file-name "$LOGS_PATH/storage_start.log" > "$LOGS_PATH/storage_start_output.log" 2>"$LOGS_PATH/storage_start_err.log" &
 sleep 10
 grep "$LOGS_PATH/storage_start_err.log" -v -f "$CONFIG_PATH/exclude_err.txt"
@@ -90,6 +91,7 @@ if [[ $? -ge 1 ]]; then
 fi
 echo Starting database process...
 $YDBD_PATH server --yaml-config "$CONFIG_PATH/$cfg" --tenant /Root/test --node-broker localhost:2136 --grpc-port 31001 --ic-port 31003 --mon-port 31002 \
+  --log-level 8 --log-sampling-rate 0 --log-format full \
   --log-file-name "$LOGS_PATH/db_start.log" > "$LOGS_PATH/db_start_output.log" 2>"$LOGS_PATH/db_start_err.log" &
 sleep 3
 grep "$LOGS_PATH/db_start_err.log" -v -f "$CONFIG_PATH/exclude_err.txt"

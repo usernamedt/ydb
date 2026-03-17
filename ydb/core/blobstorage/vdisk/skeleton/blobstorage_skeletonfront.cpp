@@ -18,6 +18,7 @@
 #include <ydb/core/blobstorage/vdisk/repl/blobstorage_repl.h>
 #include <ydb/core/blobstorage/groupinfo/blobstorage_groupinfo.h>
 #include <ydb/core/blobstorage/backpressure/queue_backpressure_server.h>
+#include <ydb/core/blobstorage/lwtrace_probes/blobstorage_probes.h>
 
 #include <ydb/core/util/light.h>
 #include <ydb/core/util/max_tracker.h>
@@ -37,6 +38,7 @@
 using namespace NKikimrServices;
 
 namespace NKikimr {
+    LWTRACE_USING(BLOBSTORAGE_PROVIDER);
 
     ////////////////////////////////////////////////////////////////////////////
     // TEvFrontRecoveryStatus
@@ -727,6 +729,7 @@ namespace NKikimr {
         ui64 NextUniqueMessageId = 1;
 
         TMonotonic StartTimestamp = TMonotonic::Zero();
+        TMonotonic LastStatsUpdateTimestamp = TMonotonic::Zero();
 
         static constexpr TDuration StuckQueueCheckPeriod = TDuration::Seconds(60);
 
@@ -1138,6 +1141,18 @@ namespace NKikimr {
         }
 
         void UpdateStats(const TActorContext &ctx) {
+            const TMonotonic now = TActivationContext::Monotonic();
+            if (LastStatsUpdateTimestamp != TMonotonic::Zero()) {
+                const TDuration actualInterval = now - LastStatsUpdateTimestamp;
+                const double configuredIntervalMs = Config->StatsUpdateInterval.MilliSeconds();
+                const double actualIntervalMs = actualInterval.MilliSeconds();
+                LWPROBE(VDiskSkeletonFrontStatsUpdate,
+                    configuredIntervalMs,
+                    actualIntervalMs,
+                    actualIntervalMs - configuredIntervalMs);
+            }
+            LastStatsUpdateTimestamp = now;
+
             UpdateWhiteboard(ctx);
 
             // Update internal queue counters that are dependant on external ticker

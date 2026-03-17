@@ -105,6 +105,9 @@ struct TEventTypeField {
     PROBE(VDiskSkeletonRecordLogged, GROUPS("VDisk"), \
       TYPES(ui64), \
       NAMES("lsn")) \
+    PROBE(VDiskSkeletonFrontStatsUpdate, GROUPS("VDisk", "SkeletonFront"), \
+      TYPES(double, double, double), \
+      NAMES("configuredIntervalMs", "actualIntervalMs", "lagMs")) \
     PROBE(HugeKeeperWriteHugeBlobReceived, GROUPS("VDisk", "HullHuge"), \
       TYPES(), \
       NAMES()) \
